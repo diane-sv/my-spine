@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>MySpine</title>
+
+<script type="text/javascript" src="{{ url_for('static', filename='sources/xtk_edge.js') }}"> 
+</script>
+
+<script type="text/javascript" src="{{ url_for('static', filename='sources/xtk_xdat.gui.js') }}"> 
+</script>
+
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">
+
+<script type="text/javascript" src="{{ url_for('static', filename='toggle.js') }}"> 
+//for togglings planes
+</script>
+
+
+{% if 'none' is sameas(home) %}
+<script> //default homepage
+window.onload = function() {
+
+  // try to create and initialize a 3D renderer
+  threeD = new X.renderer3D();
+  threeD.container = 'main3d';
+  //threeD.bgColor = [.62, .62, 1];
+  threeD.init();
+  
+  var mesh = new X.mesh();
+  mesh.file = "{{ url_for('static', filename='images/lumbar_fibers.stl') }}";
+  mesh.color = [1, 0.5, 0];
+  mesh.visible = true;
+  
+  var mesh2 = new X.mesh();
+  mesh2.file = "{{ url_for('static', filename='images/lumbar_discs.stl') }}";
+  mesh2.color = [.5, 0, 0.5];
+  mesh2.visible = true;
+
+  var mesh3 = new X.mesh();
+  mesh3.file = "{{ url_for('static', filename='images/lumbar_vertebrae.stl') }}";
+  mesh3.color = [0, .7, 0.5];
+
+  mesh2.visible = true;
+
+  mesh.transform.translateX(0);
+  mesh2.transform.translateX(7);
+  mesh3.transform.translateX(-6.6);
+
+  threeD.add(mesh);
+  threeD.add(mesh2);
+  threeD.add(mesh3);
+
+//    threeD.add(object3);
+  threeD.camera.position = [0, 0, 10];
+
+  threeD.onShowtime = function() {
+    var meshWasLoaded = true;
+    var meshWasLoaded2 = false;
+    var meshWasLoaded3 = false;
+
+    var gui = new dat.GUI();
+    var meshgui = gui.addFolder('Mesh');
+
+    var meshVisibleController = meshgui.add(mesh, 'visible');
+    var meshVisibleController2 = meshgui.add(mesh2, 'visible');
+    var meshVisibleController3 = meshgui.add(mesh3, 'visible');
+
+    var meshColorController = meshgui.addColor(mesh, 'color');
+    var meshColorController2 = meshgui.addColor(mesh2, 'color');
+    var meshColorController3 = meshgui.addColor(mesh3, 'color');
+    
+    meshgui.open();
+  
+    meshVisibleController.onChange(function(value) {
+
+      if (!meshWasLoaded) {
+        
+        // this only gets executed the first time to load the mesh, after we
+        // just toggle the visibility
+        threeD.add(mesh);
+        
+        // we set the onShowtime function to a void since we don't want to
+        // create the GUI again here
+        r.onShowtime = function() {
+        };
+        
+        // set the loaded flag
+        meshWasLoaded = true;
+        
+      }
+    
+    });
+  
+  };
+
+  threeD.render();
+}; 
+
+</script>
+
+{% else %}
+
+<script>
+// uploaded file screen
+function getExtension (filename) {
+  return filename.split('.').pop();
+};
+
+var extension_name = getExtension("{{ url_for('static', filename=home) }}");
+
+window.onload = function() {
+
+  _webGLFriendly = true;
+  try {
+    // try to create and initialize a 3D renderer
+    threeD = new X.renderer3D();
+    threeD.container = 'main3d';
+    //threeD.bgColor = [.62, .62, 1];
+    threeD.init();
+    if (extension_name == 'obj' || extension_name == 'stl') {
+      var object  = new X.mesh();
+      object.file = "{{ url_for('static', filename=home) }}";
+      object.color = [.62, .62, 1];
+    }
+    else {
+      var object = new X.volume();  
+      object.file = "{{ url_for('static', filename=home) }}";
+      object.volumeRendering = true;    // this lags
+      object.lowerThreshold = 1000;  // otherwise the threshold shows all images
+      object.color = [0,0,1];
+    }
+    
+    threeD.add(object);
+    threeD.camera.position = [250, 200, 0];
+
+    threeD.render();
+  } 
+  catch (Exception) {
+    // no webgl on this machine
+    _webGLFriendly = false;
+    
+  }
+  
+  sliceX = new X.renderer2D();
+  sliceX.container = 'sliceX';
+  sliceX.orientation = 'X';
+  sliceX.init();
+  // .. for Y
+  var sliceY = new X.renderer2D();
+  sliceY.container = 'sliceY';
+  sliceY.orientation = 'Y';
+  sliceY.init();
+  // .. and for Z
+  var sliceZ = new X.renderer2D();
+  sliceZ.container = 'sliceZ';
+  sliceZ.orientation = 'Z';
+  sliceZ.init();
+  
+
+  volume = new X.volume();
+  volume.file = "{{ url_for('static', filename=home) }}";
+
+  sliceX.add(volume);
+
+  sliceX.render();
+
+  sliceX.onShowtime = function() {
+
+    sliceY.add(volume);
+    sliceY.render();
+    sliceZ.add(volume);
+    sliceZ.render();
+    
+    if (_webGLFriendly) {
+      threeD.add(volume);
+      threeD.render();
+    }
+    
+    // now the real GUI
+    var gui = new dat.GUI();
+    
+    // the following configures the gui for interacting with the X.volume
+    var volumegui = gui.addFolder('Volume');
+
+    var vrController = volumegui.add(object, 'volumeRendering');
+
+    var lowerThresholdController = volumegui.add(object, 'lowerThreshold',
+      volume.min, volume.max);
+    var upperThresholdController = volumegui.add(object, 'upperThreshold',
+        volume.min, volume.max);
+    // the indexX,Y,Z are the currently displayed slice indices in the range
+    // 0..dimensions-1
+    var sliceXController = volumegui.add(volume, 'indexX', 0,
+        volume.range[0] - 1);
+    var sliceYController = volumegui.add(volume, 'indexY',  0,
+        volume.range[1] - 1);
+    var sliceZController = volumegui.add(volume, 'indexZ', 0,
+        volume.range[2] - 1);
+
+    volumegui.open();
+    
+  };
+  
+};
+
+</script>
+{% endif %}
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='sources/jquery-ui.css') }}">
+
+<script type="text/javascript" src="{{ url_for('static', filename='sources/jquery-1.10.2.js') }}"> </script>
+
+<script type="text/javascript" src="{{ url_for('static', filename='sources/jquery-ui.js') }}"> </script>
+
+<script>
+  $(function() {
+    $( document ).tooltip();
+  });
+  </script>
+  <style>
+  label {
+    display: inline-block;
+    width: 5em;
+  }
+  </style>
+
+</head>
+
+
+
+<body>
+<div id="header">
+  <div id="logo">
+    <img src="{{ url_for('static', filename='images/MySpine logo.png') }}" />
+    <a id="helpwindow" href="#" title="">Help Guide</a>
+  </div>
+  
+  <div>
+    <form action="/upload" method=post enctype=multipart/form-data>
+    <input type=file name=file class="button" style="float:bottom; background:#FFFF00; color:black;">
+    <input type=submit value=Upload class="button" style="float:bottom; background:#FFFF00;">
+    </form>
+  </div>
+
+  <div style="float:bottom;">
+    <button id="toggle-button1" class="button" style="background-color: #FF0000; color:white;">Toggle Sagittal</button>
+    <button id="toggle-button2" class="button" style="background-color: #4CAF50; color:white">Toggle Coronal</button>
+    <button id="toggle-button3" class="button" style="background-color: #0000FF; color:white">Toggle Transverse</button>
+  </div>
+
+</div>
+
+<script>
+$( "#helpwindow" ).tooltip({ content: '<img src="{{ url_for('static', filename="images/help_image.png") }}" />' });
+</script>
+
+<div id="main3d">
+  <button id="full">Full Screen</button>
+  <br>
+</div>
+<script>
+$('button#full').click(function(e){
+    $('#main3d').toggleClass('fullscreen'); 
+});
+</script>
+
+<div class="target1">
+  <div id="sliceX"
+    class="views"
+    style="border-top: 20px solid red;">
+    <button onclick="volume.indexX -=1">X-</button>
+    <button onclick="volume.indexX += 1">X+</button>
+  </div>
+</div>
+
+<div class="target2">
+    <div id="sliceY"
+      class="views"
+      style="border-top: 20px solid green;">
+        <button onclick="volume.indexY -=1">Y-</button>
+        <button onclick="volume.indexY += 1">Y+</button>
+      </div>
+</div>
+
+<div class="target3">
+    <div id="sliceZ"
+      class="views"
+      style="border-top: 20px solid blue;">
+      <button onclick="volume.indexZ -=1">Z-</button>
+      <button onclick="volume.indexZ +=1">Z+</button>
+      </div>
+</div>
+
+
+<script type="text/javascript">
+  document.getElementById('toggle-button1').addEventListener('click', function () {
+  toggle(document.querySelectorAll('.target1'));
+  });
+
+  document.getElementById('toggle-button2').addEventListener('click', function () {
+  toggle(document.querySelectorAll('.target2'));
+  });
+
+  document.getElementById('toggle-button3').addEventListener('click', function () {
+  toggle(document.querySelectorAll('.target3'));
+  });
+</script>
+
+</div>
+</body>
+</html>

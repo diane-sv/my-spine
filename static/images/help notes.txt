@@ -1,0 +1,19 @@
+Mouse Interaction:
+LEFT click + MOVE: rotate scene
+SHIFT + LEFT click/MIDDLE click: pan scene
+MOUSE WHEEL UP: Zoom in (fast)
+MOUSE WHEEL DOWN: Zoom out (fast)
+RIGHT click + MOVE UP: Zoom in (fine)
+RIGHT click + MOVE DOWN: Zoom Out (fine)
+
+Keyboard Interaction:
+ARROW KEYS: rotate scene
+SHIFT + ARROW KEYS: pan scene
+ALT + UP: Zoom in (fast)
+ALT + DOWN: Zoom out (fast)
+ALT + LEFT: Zoom in (fine)
+ALT + RIGHT: Zoom Out (fine)
+
+r: Reset to default view
+
+See https://github.com/xtk/X for more

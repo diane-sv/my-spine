@@ -1,0 +1,54 @@
+html, body { 
+  background-color:#fff;
+  margin: 0;
+  padding: 0;
+  height: 100%;  
+}
+
+body{font: 76% arial,sans-serif;text-align:center}
+
+div#header{background-color:#1e90ff;}
+
+#logo {
+  margin-right: 10px;
+  padding: 0px;
+  float:left;
+}
+
+div#windows{text-align:center}
+
+div#footer{background:#BFBD93;}
+div#footer p{margin:0;padding:5px 10px}
+div#footer{clear:both;width:100%}
+
+.button {
+    border: none;
+    padding: 7px 10px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+#main3d.fullscreen{
+    z-index: 9999; 
+    width: 100%; 
+    height: 100%; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+ }
+
+#main3d{
+  border-top: 20px solid yellow; 
+  background-color: #000000;
+  float: left; 
+  width:50%; height:90%;}
+  
+.views{
+    background-color: #000000; 
+    float: right; 
+    width: 50%; 
+    height: 90vh; 
+    display: inline;
+}
+  
