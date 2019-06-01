@@ -1,7 +1,8 @@
 # my-spine
 Goal: View medical images in 3D
 
-View live at https://my-spine.herokuapp.com
+View updated version live at https://spine-viewer.herokuapp.com
+It may take a while to load if using slow internet.
 
 Powered by:
 - xtk WebGL
